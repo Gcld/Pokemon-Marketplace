@@ -23,76 +23,55 @@ const PokemonList = styled.div`
   margin-bottom: 20px;
 `;
 
-const PaginationContainer = styled.div`
-  display: flex;
-  justify-content: center;
-  margin-top: 20px;
-`;
-
-const PaginationButton = styled.button`
-  background-color: #f44336;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  margin: 0 5px;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-
-  &:hover {
-    background-color: #e53935;
-  }
-
-  &:disabled {
-    background-color: #ccc;
-    cursor: not-allowed;
-  }
-`;
-
 const Home: React.FC = () => {
   const [pokemonList, setPokemonList] = useState<Pokemon[]>([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [limit, setLimit] = useState(20);
+  const [nextUrl, setNextUrl] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchPokemonList = async () => {
-      const data = await getPokemonList(currentPage, limit);
-      const mappedPokemonList: Pokemon[] = data.map((pokemon: any, index: number) => ({
-        id: (currentPage - 1) * limit + index + 1,
+      setLoading(true);
+      const data = await getPokemonList(nextUrl);
+      const mappedPokemonList: Pokemon[] = data.results.map((pokemon: any, index: number) => ({
+        id: pokemonList.length + index + 1,
         name: pokemon.name,
-        image: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${(currentPage - 1) * limit + index + 1}.png`,
+        image: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemonList.length + index + 1}.png`,
         price: 10,
         type: 'Unknown',
       }));
-      setPokemonList(mappedPokemonList);
+      setPokemonList((prevList) => [...prevList, ...mappedPokemonList]);
+      setNextUrl(data.next);
+      setLoading(false);
     };
 
     fetchPokemonList();
-  }, [currentPage, limit]);
+  }, [nextUrl]);
 
-  const handlePageChange = (pageNumber: number) => {
-    setCurrentPage(pageNumber);
+  const handleScroll = () => {
+    if (
+      window.innerHeight + document.documentElement.scrollTop ===
+      document.documentElement.offsetHeight &&
+      !loading &&
+      nextUrl
+    ) {
+      setNextUrl(nextUrl);
+    }
   };
+
+  useEffect(() => {
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [loading, nextUrl]);
 
   return (
     <Container>
-      <h1>Pokémon Marketplace</h1>
+      <Title>Pokémon Marketplace</Title>
       <PokemonList>
         {pokemonList.map((pokemon: Pokemon) => (
           <PokemonCard key={pokemon.id} pokemon={pokemon} />
         ))}
       </PokemonList>
-      <PaginationContainer>
-        {Array.from({ length: Math.ceil(151 / limit) }, (_, index) => (
-          <PaginationButton
-            key={index}
-            onClick={() => handlePageChange(index + 1)}
-            disabled={currentPage === index + 1}
-          >
-            {index + 1}
-          </PaginationButton>
-        ))}
-      </PaginationContainer>
+      {loading && <div>Loading...</div>}
     </Container>
   );
 };
