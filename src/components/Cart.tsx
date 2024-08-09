@@ -1,6 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
-import { Pokemon } from '../models/Pokemon';
+import { Pokemon } from '@/models/Pokemon';
 
 const CartContainer = styled.div`
   background-color: white;
@@ -51,19 +51,34 @@ const TotalPrice = styled.p`
   margin-top: 20px;
 `;
 
+const CheckoutButton = styled.button`
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  margin-top: 10px;
+`;
+
 interface CartProps {
   items: Pokemon[];
   onRemove: (id: number) => void;
+  onCheckout: () => void;
+  isOpen: boolean;
 }
 
-const Cart: React.FC<CartProps> = ({ items, onRemove }) => {
+const Cart: React.FC<CartProps> = ({ items, onRemove, onCheckout, isOpen }) => {
   const totalPrice = items.reduce((sum, item) => sum + item.price, 0);
+
+  if (!isOpen) return null;
 
   return (
     <CartContainer>
-      <CartTitle>Carrinho de Compras</CartTitle>
+      <CartTitle>Shopping Cart</CartTitle>
       {items.length === 0 ? (
-        <p>Seu carrinho está vazio.</p>
+        <p>Your cart is empty.</p>
       ) : (
         <>
           {items.map((item) => (
@@ -73,12 +88,13 @@ const Cart: React.FC<CartProps> = ({ items, onRemove }) => {
                 <span>{item.name}</span>
               </CartItemInfo>
               <div>
-                <span>${item.price}</span>
-                <RemoveButton onClick={() => onRemove(item.id)}>Remover</RemoveButton>
+                <span>P${item.price}</span>
+                <RemoveButton onClick={() => onRemove(item.id)}>Remove</RemoveButton>
               </div>
             </CartItem>
           ))}
-          <TotalPrice>Total: ${totalPrice}</TotalPrice>
+          <TotalPrice>Total: P${totalPrice}</TotalPrice>
+          <CheckoutButton onClick={onCheckout}>Checkout</CheckoutButton>
         </>
       )}
     </CartContainer>

@@ -1,9 +1,11 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import styled from 'styled-components';
 import PokemonCard from '../components/PokemonCard';
 import Cart from '../components/Cart';
+import UserWallet from '../components/UserWallet';
 import { getPokemonList, getPokemonDetails } from '../api/pokemonApi';
-import { Pokemon } from '../models/Pokemon';
+import { Pokemon } from '@/models/Pokemon';
+
 
 const Container = styled.div`
   background-color: #f5f5f5;
@@ -45,11 +47,36 @@ const ErrorMessage = styled.div`
   margin: 20px 0;
 `;
 
-const CartContainer = styled.div`
+const CartButton = styled.button`
   position: fixed;
   top: 20px;
   right: 20px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+`;
+
+const CartItemCount = styled.span`
+  background-color: red;
+  color: white;
+  border-radius: 50%;
+  padding: 2px 6px;
+  font-size: 12px;
+  position: absolute;
+  top: -5px;
+  right: -5px;
+`;
+
+const CartContainer = styled.div`
+  position: fixed;
+  top: 70px;
+  right: 20px;
   width: 300px;
+  z-index: 1000;
 `;
 
 const Home: React.FC = () => {
@@ -58,6 +85,9 @@ const Home: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [cartItems, setCartItems] = useState<Pokemon[]>([]);
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [balance, setBalance] = useState(1000);
+  const existingIds = useRef(new Set<number>());
 
   const fetchPokemonList = useCallback(async () => {
     if (loading) return;
@@ -67,22 +97,23 @@ const Home: React.FC = () => {
       setError(null);
       const data = await getPokemonList(nextUrl);
       const newPokemonList = await Promise.all(
-        data.results.map(async (pokemon: any) => {
-          return await getPokemonDetails(pokemon.name);
-        })
+        data.results
+          .filter((pokemon: any) => {
+            const id = parseInt(pokemon.url.split('/')[6]);
+            return !existingIds.current.has(id);
+          })
+          .map(async (pokemon: any) => {
+            const details = await getPokemonDetails(pokemon.name);
+            existingIds.current.add(details.id);
+            return details;
+          })
       );
       
-      // Remove duplicatas baseado no ID do Pokémon
-      const uniqueNewPokemonList = newPokemonList.filter((newPokemon: Pokemon) => 
-        !pokemonList.some(existingPokemon => existingPokemon.id === newPokemon.id)
-      );
-
       setPokemonList(prevList => {
-        const updatedList = [...prevList, ...uniqueNewPokemonList];
-        const uniqueList = updatedList.filter((pokemon, index, self) =>
-          index === self.findIndex((t) => t.id === pokemon.id)
+        const uniqueNewPokemon = newPokemonList.filter(
+          newPokemon => !prevList.some(existingPokemon => existingPokemon.id === newPokemon.id)
         );
-        return uniqueList;
+        return [...prevList, ...uniqueNewPokemon];
       });
       setNextUrl(data.next);
     } catch (err) {
@@ -91,7 +122,7 @@ const Home: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [nextUrl, loading, pokemonList]);
+  }, [nextUrl, loading]);
 
   useEffect(() => {
     fetchPokemonList();
@@ -104,9 +135,9 @@ const Home: React.FC = () => {
       !loading &&
       nextUrl
     ) {
-      setNextUrl(nextUrl);
+      fetchPokemonList();
     }
-  }, [loading, nextUrl]);
+  }, [loading, nextUrl, fetchPokemonList]);
 
   useEffect(() => {
     window.addEventListener('scroll', handleScroll);
@@ -121,9 +152,25 @@ const Home: React.FC = () => {
     setCartItems((prevItems) => prevItems.filter((item) => item.id !== id));
   };
 
+  const handleCheckout = () => {
+    const totalPrice = cartItems.reduce((sum, item) => sum + item.price, 0);
+    if (balance >= totalPrice) {
+      setBalance(prevBalance => prevBalance - totalPrice);
+      setCartItems([]);
+      alert('Purchase successful!');
+    } else {
+      alert('Insufficient funds!');
+    }
+  };
+
+  const handleAddFunds = (amount: number) => {
+    setBalance(prevBalance => prevBalance + amount);
+  };
+
   return (
     <Container>
       <Title>Pokémon Marketplace</Title>
+      <UserWallet balance={balance} onAddFunds={handleAddFunds} />
       {error && <ErrorMessage>{error}</ErrorMessage>}
       <PokemonList>
         {pokemonList.map((pokemon: Pokemon) => (
@@ -135,8 +182,17 @@ const Home: React.FC = () => {
         ))}
       </PokemonList>
       {loading && <LoadingSpinner />}
+      <CartButton onClick={() => setIsCartOpen(!isCartOpen)}>
+        Cart
+        {cartItems.length > 0 && <CartItemCount>{cartItems.length}</CartItemCount>}
+      </CartButton>
       <CartContainer>
-        <Cart items={cartItems} onRemove={removeFromCart} />
+        <Cart 
+          items={cartItems} 
+          onRemove={removeFromCart} 
+          onCheckout={handleCheckout}
+          isOpen={isCartOpen}
+        />
       </CartContainer>
     </Container>
   );

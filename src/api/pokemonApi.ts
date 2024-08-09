@@ -6,7 +6,7 @@ import { API_BASE_URL, DITTO_IMAGE } from '../data/pokemonData';
 
 export const getPokemonList = async (url: string | null): Promise<any> => {
   if (!url) {
-    url = `${API_BASE_URL}/pokemon`;
+    url = `${API_BASE_URL}/pokemon?limit=20`;
   }
   const response = await axios.get(url);
   return response.data;
