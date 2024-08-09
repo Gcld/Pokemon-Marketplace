@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import PokemonCard from '../components/PokemonCard';
 import Cart from '../components/Cart';
 import { getPokemonList, getPokemonDetails } from '../api/pokemonApi';
-import { ExtendedPokemon } from '@/models/extendedPokemon';
+import { Pokemon } from '@/models/pokemon';
 
 const Container = styled.div`
   background-color: #f5f5f5;
@@ -53,11 +53,11 @@ const CartContainer = styled.div`
 `;
 
 const Home: React.FC = () => {
-  const [pokemonList, setPokemonList] = useState<ExtendedPokemon[]>([]);
+  const [pokemonList, setPokemonList] = useState<Pokemon[]>([]);
   const [nextUrl, setNextUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [cartItems, setCartItems] = useState<ExtendedPokemon[]>([]);
+  const [cartItems, setCartItems] = useState<Pokemon[]>([]);
 
   const fetchPokemonList = useCallback(async () => {
     if (loading) return;
@@ -73,7 +73,7 @@ const Home: React.FC = () => {
       );
       
       // Remove duplicatas baseado no ID do Pokémon
-      const uniqueNewPokemonList = newPokemonList.filter((newPokemon: ExtendedPokemon) => 
+      const uniqueNewPokemonList = newPokemonList.filter((newPokemon: Pokemon) => 
         !pokemonList.some(existingPokemon => existingPokemon.id === newPokemon.id)
       );
 
@@ -113,7 +113,7 @@ const Home: React.FC = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [handleScroll]);
 
-  const addToCart = (pokemon: ExtendedPokemon) => {
+  const addToCart = (pokemon: Pokemon) => {
     setCartItems((prevItems) => [...prevItems, pokemon]);
   };
 
@@ -126,7 +126,7 @@ const Home: React.FC = () => {
       <Title>Pokémon Marketplace</Title>
       {error && <ErrorMessage>{error}</ErrorMessage>}
       <PokemonList>
-        {pokemonList.map((pokemon: ExtendedPokemon) => (
+        {pokemonList.map((pokemon: Pokemon) => (
           <PokemonCard 
             key={pokemon.id} 
             pokemon={pokemon} 

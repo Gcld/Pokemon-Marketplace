@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import styled from 'styled-components';
 import { getPokemonDetails } from '@/api/pokemonApi';
-import { ExtendedPokemon } from '@/models/extendedPokemon';
+import { Pokemon } from '@/models/pokemon';
 
 const Container = styled.div`
   background-color: #f5f5f5;
@@ -57,7 +57,7 @@ const PriceTag = styled.div`
 const PokemonDetails: React.FC = () => {
   const router = useRouter();
   const { name } = router.query;
-  const [pokemonDetails, setPokemonDetails] = useState<ExtendedPokemon | null>(null);
+  const [pokemonDetails, setPokemonDetails] = useState<Pokemon | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 

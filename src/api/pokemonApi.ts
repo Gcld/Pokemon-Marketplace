@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { ExtendedPokemon } from '@/models/extendedPokemon';
+import { Pokemon } from '@/models/pokemon';
 
 const API_BASE_URL = 'https://pokeapi.co/api/v2';
 const DITTO_IMAGE = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/132.png';
@@ -92,7 +92,7 @@ const calculatePokemonPrice = (
   return Math.round(basePrice);
 };
 
-export const getPokemonDetails = async (pokemonName: string): Promise<ExtendedPokemon> => {
+export const getPokemonDetails = async (pokemonName: string): Promise<Pokemon> => {
   try {
     const response = await axios.get(`${API_BASE_URL}/pokemon/${pokemonName}`);
     
@@ -114,7 +114,7 @@ export const getPokemonDetails = async (pokemonName: string): Promise<ExtendedPo
 
     const evolutionChain = getEvolutionChain(evolutionChainResponse.data.chain);
 
-    const pokemonDetails: ExtendedPokemon = {
+    const pokemonDetails: Pokemon = {
       id: response.data.id,
       name: response.data.name,
       image: response.data.sprites.front_default || DITTO_IMAGE, // Usa a imagem do Ditto como fallback
