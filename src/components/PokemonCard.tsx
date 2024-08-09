@@ -2,9 +2,11 @@ import React from 'react';
 import styled from 'styled-components';
 import Link from 'next/link';
 import { Pokemon } from '../models/Pokemon';
+import { getTypeColor, getLighterColor } from '@/utils/typeColors';
 
 interface PokemonCardProps {
   pokemon: Pokemon;
+  onAddToCart: () => void;
 }
 
 const Header = styled.header`
@@ -40,30 +42,17 @@ const PaginationButton = styled.button`
   }
 `;
 
-const Card = styled.div`
-  background-color: #f5f5f5;
+const Card = styled.div<{ backgroundColor: string, lighterColor: string }>`
+  background: linear-gradient(135deg, ${props => props.backgroundColor} 0%, ${props => props.lighterColor} 100%);
   border-radius: 10px;
   padding: 20px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   text-align: center;
-  transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
-  opacity: 1;
-  transform: scale(1);
-  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
 
   &:hover {
     transform: scale(1.05);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  }
-
-  &.fade-enter {
-    opacity: 0;
-    transform: scale(0.9);
-  }
-
-  &.fade-exit {
-    opacity: 0;
-    transform: scale(0.9);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
   }
 `;
 
@@ -71,58 +60,65 @@ const PokemonImage = styled.img`
   width: 120px;
   height: 120px;
   margin-bottom: 10px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
 `;
 
 const PokemonName = styled.h3`
   font-size: 18px;
   font-weight: bold;
   margin-bottom: 5px;
+  color: #fff;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
 `;
 
 const PokemonType = styled.p`
   font-size: 14px;
-  color: #888;
+  color: #f0f0f0;
   margin-bottom: 10px;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
 `;
 
 const PokemonPrice = styled.p`
   font-size: 16px;
   font-weight: bold;
-`;
-
-const PokemonList = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  grid-gap: 20px;
-  margin-bottom: 20px;
+  color: #fff;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
 `;
 
 const AddToCartButton = styled.button`
-  background-color: #4CAF50;
+  background-color: rgba(255, 255, 255, 0.2);
   color: white;
-  border: none;
-  padding: 5px 10px;
-  border-radius: 3px;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  padding: 10px 20px;
+  border-radius: 5px;
   cursor: pointer;
+  font-size: 14px;
   margin-top: 10px;
+  transition: background-color 0.2s, transform 0.1s;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
 `;
 
-interface PokemonCardProps {
-  pokemon: Pokemon;
-  onAddToCart: () => void;
-}
-
-
 const PokemonCard: React.FC<PokemonCardProps> = ({ pokemon, onAddToCart }) => {
+  const backgroundColor = getTypeColor(pokemon.type.split(',')[0].trim());
+  const lighterColor = getLighterColor(backgroundColor);
+
   return (
-    <Card>
+    <Card backgroundColor={backgroundColor} lighterColor={lighterColor}>
       <Link href={`/pokemon/${pokemon.name}`}>
         <PokemonImage src={pokemon.image} alt={pokemon.name} />
         <PokemonName>{pokemon.name}</PokemonName>
+        <PokemonType>{pokemon.type}</PokemonType>
         <PokemonPrice>Price: ${pokemon.price}</PokemonPrice>
-        <PokemonType>Type: {pokemon.type}</PokemonType>
       </Link>
-      <AddToCartButton onClick={onAddToCart}>Adicionar ao Carrinho</AddToCartButton>
+      <AddToCartButton onClick={onAddToCart}>Add to Cart</AddToCartButton>
     </Card>
   );
 };

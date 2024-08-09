@@ -5,6 +5,7 @@ import PokemonCard from '../components/PokemonCard';
 import Cart from '../components/Cart';
 import UserWallet from '../components/UserWallet';
 import FilterBar from '../components/FilterBar';
+import SearchBar from '../components/SearchBar';
 import { getPokemonList, getPokemonDetails } from '../api/pokemonApi';
 import { Pokemon } from '@/models/Pokemon';
 import { adjustPokemonPrice } from '../utils/pokemonUtils';
@@ -95,6 +96,7 @@ const Home: React.FC = () => {
   const [filterType, setFilterType] = useState('');
   const [debouncedFilterType, setDebouncedFilterType] = useState(filterType);
   const [debouncedSortType, setDebouncedSortType] = useState(sortType);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -160,6 +162,13 @@ const Home: React.FC = () => {
 
     let sortedAndFilteredList = [...adjustedPokemonList];
 
+    // Aplicar busca por nome
+    if (searchTerm) {
+      sortedAndFilteredList = sortedAndFilteredList.filter(pokemon =>
+        pokemon.name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
     // Aplicar filtro por tipo
     if (debouncedFilterType) {
       sortedAndFilteredList = sortedAndFilteredList.filter(pokemon => 
@@ -187,7 +196,7 @@ const Home: React.FC = () => {
     }
 
     setFilteredPokemonList(sortedAndFilteredList);
-  }, [pokemonList, debouncedSortType, debouncedFilterType]);
+  }, [pokemonList, debouncedSortType, debouncedFilterType, searchTerm]);
 
   const handleScroll = useCallback(() => {
     if (
@@ -236,10 +245,15 @@ const Home: React.FC = () => {
     }
   };
 
+  const handleSearch = (term: string) => {
+    setSearchTerm(term);
+  };
+
   return (
     <Container>
       <Title>Pokémon Marketplace</Title>
       <UserWallet balance={balance} onAddFunds={handleAddFunds} />
+      <SearchBar onSearch={handleSearch} />
       <FilterBar onFilterChange={handleFilterChange} />
       {error && <ErrorMessage>{error}</ErrorMessage>}
       <PokemonList>
