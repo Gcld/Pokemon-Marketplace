@@ -2,12 +2,13 @@ import React from 'react';
 import styled from 'styled-components';
 import Link from 'next/link';
 import { Pokemon } from '../models/Pokemon';
-import { getTypeColor, getLighterColor } from '@/utils/typeColors';
+import { getTypeColor, getLighterColor, getContrastColor } from '@/utils/typeColors';
 
 interface PokemonCardProps {
   pokemon: Pokemon;
   onAddToCart: () => void;
 }
+
 
 const Header = styled.header`
   background-color: #f44336;
@@ -63,41 +64,40 @@ const PokemonImage = styled.img`
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
 `;
 
-const PokemonName = styled.h3`
+const PokemonName = styled.h3<{ textColor: string }>`
   font-size: 18px;
   font-weight: bold;
   margin-bottom: 5px;
-  color: #fff;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+  color: ${props => props.textColor};
+  text-shadow: ${props => props.textColor === '#ffffff' ? '1px 1px 2px rgba(0, 0, 0, 0.5)' : 'none'};
 `;
 
-const PokemonType = styled.p`
+const PokemonType = styled.p<{ textColor: string }>`
   font-size: 14px;
-  color: #f0f0f0;
+  color: ${props => props.textColor};
   margin-bottom: 10px;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+  opacity: 0.8;
 `;
 
-const PokemonPrice = styled.p`
+const PokemonPrice = styled.p<{ textColor: string }>`
   font-size: 16px;
   font-weight: bold;
-  color: #fff;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+  color: ${props => props.textColor};
 `;
 
-const AddToCartButton = styled.button`
-  background-color: rgba(255, 255, 255, 0.2);
-  color: white;
-  border: 2px solid rgba(255, 255, 255, 0.5);
+const AddToCartButton = styled.button<{ textColor: string, backgroundColor: string }>`
+  background-color: ${props => props.backgroundColor};
+  color: ${props => props.textColor};
+  border: none;
   padding: 10px 20px;
   border-radius: 5px;
   cursor: pointer;
   font-size: 14px;
   margin-top: 10px;
-  transition: background-color 0.2s, transform 0.1s;
+  transition: opacity 0.2s, transform 0.1s;
 
   &:hover {
-    background-color: rgba(255, 255, 255, 0.3);
+    opacity: 0.9;
     transform: translateY(-2px);
   }
 
@@ -109,16 +109,21 @@ const AddToCartButton = styled.button`
 const PokemonCard: React.FC<PokemonCardProps> = ({ pokemon, onAddToCart }) => {
   const backgroundColor = getTypeColor(pokemon.type.split(',')[0].trim());
   const lighterColor = getLighterColor(backgroundColor);
+  const textColor = getContrastColor(backgroundColor);
+  const buttonBackgroundColor = textColor === '#ffffff' ? 'rgba(0, 0, 0, 0.5)' : 'rgba(255, 255, 255, 0.8)';
+  const buttonTextColor = textColor === '#ffffff' ? '#ffffff' : '#000000';
 
   return (
     <Card backgroundColor={backgroundColor} lighterColor={lighterColor}>
       <Link href={`/pokemon/${pokemon.name}`}>
         <PokemonImage src={pokemon.image} alt={pokemon.name} />
-        <PokemonName>{pokemon.name}</PokemonName>
-        <PokemonType>{pokemon.type}</PokemonType>
-        <PokemonPrice>Price: ${pokemon.price}</PokemonPrice>
+        <PokemonName textColor={textColor}>{pokemon.name}</PokemonName>
+        <PokemonType textColor={textColor}>{pokemon.type}</PokemonType>
+        <PokemonPrice textColor={textColor}>Price: ${pokemon.price}</PokemonPrice>
       </Link>
-      <AddToCartButton onClick={onAddToCart}>Add to Cart</AddToCartButton>
+      <AddToCartButton onClick={onAddToCart} textColor={buttonTextColor} backgroundColor={buttonBackgroundColor}>
+        Add to Cart
+      </AddToCartButton>
     </Card>
   );
 };

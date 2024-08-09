@@ -37,3 +37,19 @@ export const typeColors: { [key: string]: string } = {
     // Converte de volta para hexadecimal
     return `#${newR.toString(16).padStart(2, '0')}${newG.toString(16).padStart(2, '0')}${newB.toString(16).padStart(2, '0')}`;
   };
+
+  export const getContrastColor = (hexColor: string): string => {
+    // Remove o # se estiver presente
+    const color = hexColor.charAt(0) === '#' ? hexColor.substring(1, 7) : hexColor;
+    
+    // Converte para RGB
+    const r = parseInt(color.substring(0, 2), 16);
+    const g = parseInt(color.substring(2, 4), 16);
+    const b = parseInt(color.substring(4, 6), 16);
+    
+    // Calcula a luminância
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  
+    // Retorna branco para cores escuras e preto para cores claras
+    return luminance > 0.5 ? '#000000' : '#ffffff';
+  };
