@@ -1,6 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
-import { ExtendedPokemon } from '@/models/extendedPokemon';
+import { Pokemon } from '@/models/pokemon';
 
 const CartContainer = styled.div`
   background-color: white;
@@ -52,7 +52,7 @@ const TotalPrice = styled.p`
 `;
 
 interface CartProps {
-  items: ExtendedPokemon[];
+  items: Pokemon[];
   onRemove: (id: number) => void;
 }
 

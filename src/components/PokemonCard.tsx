@@ -1,10 +1,10 @@
 import React from 'react';
 import styled from 'styled-components';
 import Link from 'next/link';
-import { ExtendedPokemon } from '@/models/extendedPokemon';
+import {Pokemon } from '@/models/pokemon';
 
 interface PokemonCardProps {
-  pokemon: ExtendedPokemon;
+  pokemon: Pokemon;
 }
 
 const Header = styled.header`
@@ -94,7 +94,7 @@ const AddToCartButton = styled.button`
 `;
 
 interface PokemonCardProps {
-  pokemon: ExtendedPokemon;
+  pokemon: Pokemon;
   onAddToCart: () => void;
 }
 
