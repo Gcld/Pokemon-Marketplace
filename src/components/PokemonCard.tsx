@@ -46,10 +46,24 @@ const Card = styled.div`
   padding: 20px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   text-align: center;
-  transition: transform 0.2s;
+  transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+  opacity: 1;
+  transform: scale(1);
+  cursor: pointer;
 
   &:hover {
     transform: scale(1.05);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  }
+
+  &.fade-enter {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+
+  &.fade-exit {
+    opacity: 0;
+    transform: scale(0.9);
   }
 `;
 

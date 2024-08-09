@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { Pokemon } from '@/models/Pokemon';
 
 export const getTypeWeaknesses = async (typeUrl: string): Promise<string[]> => {
   if (!typeUrl) return [];
@@ -22,3 +23,26 @@ export const getEvolutionChain = (chain: any): string[] => {
 
   return evolutions;
 };
+
+export const isMegaEvolution = (pokemonName: string): boolean => {
+    return pokemonName.toLowerCase().endsWith('-mega');
+  };
+  
+  export const getBasePokemonName = (megaPokemonName: string): string => {
+    return megaPokemonName.toLowerCase().replace('-mega', '');
+  };
+  
+  export const adjustPokemonPrice = (pokemon: Pokemon, allPokemon: Pokemon[]): number => {
+    if (!isMegaEvolution(pokemon.name)) {
+      return pokemon.price;
+    }
+  
+    const basePokemonName = getBasePokemonName(pokemon.name);
+    const basePokemon = allPokemon.find(p => p.name.toLowerCase() === basePokemonName);
+  
+    if (basePokemon) {
+      return Math.max(basePokemon.price * 1.5, pokemon.price);
+    }
+  
+    return pokemon.price;
+  };

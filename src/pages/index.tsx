@@ -1,11 +1,13 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import styled from 'styled-components';
+import { TransitionGroup, CSSTransition } from 'react-transition-group';
 import PokemonCard from '../components/PokemonCard';
 import Cart from '../components/Cart';
 import UserWallet from '../components/UserWallet';
+import FilterBar from '../components/FilterBar';
 import { getPokemonList, getPokemonDetails } from '../api/pokemonApi';
 import { Pokemon } from '@/models/Pokemon';
-
+import { adjustPokemonPrice } from '../utils/pokemonUtils';
 
 const Container = styled.div`
   background-color: #f5f5f5;
@@ -19,7 +21,7 @@ const Title = styled.h1`
   margin-bottom: 20px;
 `;
 
-const PokemonList = styled.div`
+const PokemonList = styled(TransitionGroup)`
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   grid-gap: 20px;
@@ -81,6 +83,7 @@ const CartContainer = styled.div`
 
 const Home: React.FC = () => {
   const [pokemonList, setPokemonList] = useState<Pokemon[]>([]);
+  const [filteredPokemonList, setFilteredPokemonList] = useState<Pokemon[]>([]);
   const [nextUrl, setNextUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -88,6 +91,19 @@ const Home: React.FC = () => {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [balance, setBalance] = useState(1000);
   const existingIds = useRef(new Set<number>());
+  const [sortType, setSortType] = useState('id');
+  const [filterType, setFilterType] = useState('');
+  const [debouncedFilterType, setDebouncedFilterType] = useState(filterType);
+  const [debouncedSortType, setDebouncedSortType] = useState(sortType);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedFilterType(filterType);
+      setDebouncedSortType(sortType);
+    }, 300); // 300ms delay
+
+    return () => clearTimeout(timer);
+  }, [filterType, sortType]);
 
   const fetchPokemonList = useCallback(async () => {
     if (loading) return;
@@ -111,7 +127,7 @@ const Home: React.FC = () => {
       
       setPokemonList(prevList => {
         const uniqueNewPokemon = newPokemonList.filter(
-          newPokemon => !prevList.some(existingPokemon => existingPokemon.id === newPokemon.id)
+          newPokemon => !prevList.some(existingPokemon => existingPokemon.name === newPokemon.name)
         );
         return [...prevList, ...uniqueNewPokemon];
       });
@@ -127,6 +143,51 @@ const Home: React.FC = () => {
   useEffect(() => {
     fetchPokemonList();
   }, [fetchPokemonList]);
+
+  useEffect(() => {
+    const uniquePokemonMap = new Map();
+    pokemonList.forEach(pokemon => {
+      const baseName = pokemon.name.replace('-mega', '');
+      if (!uniquePokemonMap.has(baseName) || pokemon.name.endsWith('-mega')) {
+        uniquePokemonMap.set(baseName, pokemon);
+      }
+    });
+
+    let adjustedPokemonList = Array.from(uniquePokemonMap.values()).map(pokemon => ({
+      ...pokemon,
+      price: adjustPokemonPrice(pokemon, Array.from(uniquePokemonMap.values()))
+    }));
+
+    let sortedAndFilteredList = [...adjustedPokemonList];
+
+    // Aplicar filtro por tipo
+    if (debouncedFilterType) {
+      sortedAndFilteredList = sortedAndFilteredList.filter(pokemon => 
+        pokemon.type.toLowerCase().includes(debouncedFilterType.toLowerCase())
+      );
+    }
+
+    // Aplicar ordenação
+    switch (debouncedSortType) {
+      case 'name':
+        sortedAndFilteredList.sort((a, b) => a.name.localeCompare(b.name));
+        break;
+      case 'price-asc':
+        sortedAndFilteredList.sort((a, b) => a.price - b.price);
+        break;
+      case 'price-desc':
+        sortedAndFilteredList.sort((a, b) => b.price - a.price);
+        break;
+      default: // 'id'
+        sortedAndFilteredList.sort((a, b) => {
+          const aId = parseInt(a.id.toString().replace(/^0+/, ''));
+          const bId = parseInt(b.id.toString().replace(/^0+/, ''));
+          return aId - bId;
+        });
+    }
+
+    setFilteredPokemonList(sortedAndFilteredList);
+  }, [pokemonList, debouncedSortType, debouncedFilterType]);
 
   const handleScroll = useCallback(() => {
     if (
@@ -167,18 +228,32 @@ const Home: React.FC = () => {
     setBalance(prevBalance => prevBalance + amount);
   };
 
+  const handleFilterChange = (filterType: string, value: string) => {
+    if (filterType === 'sort') {
+      setSortType(value);
+    } else if (filterType === 'type') {
+      setFilterType(value);
+    }
+  };
+
   return (
     <Container>
       <Title>Pokémon Marketplace</Title>
       <UserWallet balance={balance} onAddFunds={handleAddFunds} />
+      <FilterBar onFilterChange={handleFilterChange} />
       {error && <ErrorMessage>{error}</ErrorMessage>}
       <PokemonList>
-        {pokemonList.map((pokemon: Pokemon) => (
-          <PokemonCard 
-            key={pokemon.id} 
-            pokemon={pokemon} 
-            onAddToCart={() => addToCart(pokemon)}
-          />
+        {filteredPokemonList.map((pokemon: Pokemon) => (
+          <CSSTransition
+            key={pokemon.id}
+            timeout={300}
+            classNames="fade"
+          >
+            <PokemonCard 
+              pokemon={pokemon} 
+              onAddToCart={() => addToCart(pokemon)}
+            />
+          </CSSTransition>
         ))}
       </PokemonList>
       {loading && <LoadingSpinner />}
