@@ -23,25 +23,54 @@ const PokemonList = styled.div`
   margin-bottom: 20px;
 `;
 
+const LoadingSpinner = styled.div`
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #3498db;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin: 20px auto;
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+`;
+
+const ErrorMessage = styled.div`
+  color: #ff0000;
+  text-align: center;
+  margin: 20px 0;
+`;
+
 const Home: React.FC = () => {
   const [pokemonList, setPokemonList] = useState<Pokemon[]>([]);
   const [nextUrl, setNextUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchPokemonList = async () => {
       setLoading(true);
-      const data = await getPokemonList(nextUrl);
-      const mappedPokemonList: Pokemon[] = data.results.map((pokemon: any, index: number) => ({
-        id: pokemonList.length + index + 1,
-        name: pokemon.name,
-        image: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemonList.length + index + 1}.png`,
-        price: 10,
-        type: 'Unknown',
-      }));
-      setPokemonList((prevList) => [...prevList, ...mappedPokemonList]);
-      setNextUrl(data.next);
-      setLoading(false);
+      setError(null);
+      try {
+        const data = await getPokemonList(nextUrl);
+        const mappedPokemonList: Pokemon[] = data.results.map((pokemon: any, index: number) => ({
+          id: pokemonList.length + index + 1,
+          name: pokemon.name,
+          image: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemonList.length + index + 1}.png`,
+          price: 10,
+          type: 'Unknown',
+        }));
+        setPokemonList((prevList) => [...prevList, ...mappedPokemonList]);
+        setNextUrl(data.next);
+      } catch (err) {
+        setError('Failed to fetch Pokémon. Please try again later.');
+        console.error('Error fetching Pokémon:', err);
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchPokemonList();
@@ -66,12 +95,13 @@ const Home: React.FC = () => {
   return (
     <Container>
       <Title>Pokémon Marketplace</Title>
+      {error && <ErrorMessage>{error}</ErrorMessage>}
       <PokemonList>
         {pokemonList.map((pokemon: Pokemon) => (
           <PokemonCard key={pokemon.id} pokemon={pokemon} />
         ))}
       </PokemonList>
-      {loading && <div>Loading...</div>}
+      {loading && <LoadingSpinner />}
     </Container>
   );
 };
