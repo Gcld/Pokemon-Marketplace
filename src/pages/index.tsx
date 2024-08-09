@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import styled from 'styled-components';
 import PokemonCard from '../components/PokemonCard';
+import Cart from '../components/Cart';
 import { getPokemonList, getPokemonDetails } from '../api/pokemonApi';
 import { ExtendedPokemon } from '@/models/extendedPokemon';
 
@@ -44,43 +45,59 @@ const ErrorMessage = styled.div`
   margin: 20px 0;
 `;
 
+const CartContainer = styled.div`
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  width: 300px;
+`;
+
 const Home: React.FC = () => {
   const [pokemonList, setPokemonList] = useState<ExtendedPokemon[]>([]);
   const [nextUrl, setNextUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [cartItems, setCartItems] = useState<ExtendedPokemon[]>([]);
+
+  const fetchPokemonList = useCallback(async () => {
+    if (loading) return;
+
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await getPokemonList(nextUrl);
+      const newPokemonList = await Promise.all(
+        data.results.map(async (pokemon: any) => {
+          return await getPokemonDetails(pokemon.name);
+        })
+      );
+      
+      // Remove duplicatas baseado no ID do Pokémon
+      const uniqueNewPokemonList = newPokemonList.filter((newPokemon: ExtendedPokemon) => 
+        !pokemonList.some(existingPokemon => existingPokemon.id === newPokemon.id)
+      );
+
+      setPokemonList(prevList => {
+        const updatedList = [...prevList, ...uniqueNewPokemonList];
+        const uniqueList = updatedList.filter((pokemon, index, self) =>
+          index === self.findIndex((t) => t.id === pokemon.id)
+        );
+        return uniqueList;
+      });
+      setNextUrl(data.next);
+    } catch (err) {
+      setError('Failed to fetch Pokémon. Please try again later.');
+      console.error('Error fetching Pokémon:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [nextUrl, loading, pokemonList]);
 
   useEffect(() => {
-    const fetchPokemonList = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const data = await getPokemonList(nextUrl);
-        const newPokemonList = await Promise.all(
-          data.results.map(async (pokemon: any) => {
-            return await getPokemonDetails(pokemon.name);
-          })
-        );
-        
-        // Remove duplicatas baseado no ID do Pokémon
-        const uniqueNewPokemonList = newPokemonList.filter((newPokemon: ExtendedPokemon) => 
-          !pokemonList.some(existingPokemon => existingPokemon.id === newPokemon.id)
-        );
-
-        setPokemonList(prevList => [...prevList, ...uniqueNewPokemonList]);
-        setNextUrl(data.next);
-      } catch (err) {
-        setError('Failed to fetch Pokémon. Please try again later.');
-        console.error('Error fetching Pokémon:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchPokemonList();
-  }, [nextUrl]);
+  }, [fetchPokemonList]);
 
-  const handleScroll = () => {
+  const handleScroll = useCallback(() => {
     if (
       window.innerHeight + document.documentElement.scrollTop >=
       document.documentElement.offsetHeight - 100 &&
@@ -89,12 +106,20 @@ const Home: React.FC = () => {
     ) {
       setNextUrl(nextUrl);
     }
-  };
+  }, [loading, nextUrl]);
 
   useEffect(() => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [loading, nextUrl]);
+  }, [handleScroll]);
+
+  const addToCart = (pokemon: ExtendedPokemon) => {
+    setCartItems((prevItems) => [...prevItems, pokemon]);
+  };
+
+  const removeFromCart = (id: number) => {
+    setCartItems((prevItems) => prevItems.filter((item) => item.id !== id));
+  };
 
   return (
     <Container>
@@ -102,10 +127,17 @@ const Home: React.FC = () => {
       {error && <ErrorMessage>{error}</ErrorMessage>}
       <PokemonList>
         {pokemonList.map((pokemon: ExtendedPokemon) => (
-          <PokemonCard key={pokemon.id} pokemon={pokemon} />
+          <PokemonCard 
+            key={pokemon.id} 
+            pokemon={pokemon} 
+            onAddToCart={() => addToCart(pokemon)}
+          />
         ))}
       </PokemonList>
       {loading && <LoadingSpinner />}
+      <CartContainer>
+        <Cart items={cartItems} onRemove={removeFromCart} />
+      </CartContainer>
     </Container>
   );
 };

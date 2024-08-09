@@ -1,10 +1,10 @@
 import React from 'react';
 import styled from 'styled-components';
 import Link from 'next/link';
-import { Pokemon } from '@/models/pokemon';
+import { ExtendedPokemon } from '@/models/extendedPokemon';
 
 interface PokemonCardProps {
-  pokemon: Pokemon;
+  pokemon: ExtendedPokemon;
 }
 
 const Header = styled.header`
@@ -83,16 +83,33 @@ const PokemonList = styled.div`
   margin-bottom: 20px;
 `;
 
-const PokemonCard: React.FC<PokemonCardProps> = ({ pokemon }) => {
+const AddToCartButton = styled.button`
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 3px;
+  cursor: pointer;
+  margin-top: 10px;
+`;
+
+interface PokemonCardProps {
+  pokemon: ExtendedPokemon;
+  onAddToCart: () => void;
+}
+
+
+const PokemonCard: React.FC<PokemonCardProps> = ({ pokemon, onAddToCart }) => {
   return (
-    <Link href={`/pokemon/${pokemon.name}`}>
-      <Card>
+    <Card>
+      <Link href={`/pokemon/${pokemon.name}`}>
         <PokemonImage src={pokemon.image} alt={pokemon.name} />
         <PokemonName>{pokemon.name}</PokemonName>
         <PokemonPrice>Price: ${pokemon.price}</PokemonPrice>
         <PokemonType>Type: {pokemon.type}</PokemonType>
-      </Card>
-    </Link>
+      </Link>
+      <AddToCartButton onClick={onAddToCart}>Adicionar ao Carrinho</AddToCartButton>
+    </Card>
   );
 };
 

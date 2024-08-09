@@ -2,6 +2,7 @@ import axios from 'axios';
 import { ExtendedPokemon } from '@/models/extendedPokemon';
 
 const API_BASE_URL = 'https://pokeapi.co/api/v2';
+const DITTO_IMAGE = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/132.png';
 
 export const getPokemonList = async (url: string | null): Promise<any> => {
   if (!url) {
@@ -12,51 +13,75 @@ export const getPokemonList = async (url: string | null): Promise<any> => {
   return response.data;
 };
 
+const legendaryPokemon = [
+  'articuno', 'zapdos', 'moltres', 'mewtwo', 'mew',
+  'raikou', 'entei', 'suicune', 'lugia', 'ho-oh', 'celebi',
+  'regirock', 'regice', 'registeel', 'latias', 'latios', 'kyogre', 'groudon', 'rayquaza', 'jirachi', 'deoxys',
+  'uxie', 'mesprit', 'azelf', 'dialga', 'palkia', 'heatran', 'regigigas', 'giratina', 'cresselia', 'phione', 'manaphy', 'darkrai', 'shaymin', 'arceus',
+  'victini', 'cobalion', 'terrakion', 'virizion', 'tornadus', 'thundurus', 'reshiram', 'zekrom', 'landorus', 'kyurem', 'keldeo', 'meloetta', 'genesect',
+  'xerneas', 'yveltal', 'zygarde', 'diancie', 'hoopa', 'volcanion',
+  'type-null', 'silvally', 'tapu-koko', 'tapu-lele', 'tapu-bulu', 'tapu-fini', 'cosmog', 'cosmoem', 'solgaleo', 'lunala', 'nihilego', 'buzzwole', 'pheromosa', 'xurkitree', 'celesteela', 'kartana', 'guzzlord', 'necrozma', 'magearna', 'marshadow', 'poipole', 'naganadel', 'stakataka', 'blacephalon', 'zeraora', 'meltan', 'melmetal',
+  'zacian', 'zamazenta', 'eternatus', 'kubfu', 'urshifu', 'regieleki', 'regidrago', 'glastrier', 'spectrier', 'calyrex'
+];
+
 const semiLegendaryPokemon = [
   'dragonite', 'tyranitar', 'salamence', 'metagross', 'garchomp',
-  'hydreigon', 'goodra', 'kommo-o', 'dragapult', 'gyarados'
+  'hydreigon', 'goodra', 'kommo-o', 'dragapult', 'gyarados', 'lapras'
 ];
+
+const specialEvolutions = {
+  'eevee': ['vaporeon', 'jolteon', 'flareon', 'espeon', 'umbreon', 'leafeon', 'glaceon', 'sylveon'],
+  'tyrogue': ['hitmonlee', 'hitmonchan', 'hitmontop'],
+  'wurmple': ['silcoon', 'beautifly', 'cascoon', 'dustox'],
+  'poliwag': ['poliwhirl', 'poliwrath', 'politoed'],
+  'slowpoke': ['slowbro', 'slowking'],
+  'oddish': ['gloom', 'vileplume', 'bellossom'],
+  'burmy': ['wormadam', 'mothim'],
+  'snorunt': ['glalie', 'froslass'],
+  'clamperl': ['huntail', 'gorebyss'],
+  'nincada': ['ninjask', 'shedinja']
+};
 
 const calculatePokemonPrice = (
   pokemonData: any,
   speciesData: any,
   evolutionChain: string[]
 ): number => {
-  let basePrice = 10; // Preço base (Pikachu)
+  let basePrice = 100; // Aumentamos o preço base para ter mais margem para diferenciação
 
-  // Fator para Pokémon iniciais (assumindo que eles têm 3 evoluções)
-  if (evolutionChain.length === 3) {
-    const evolutionIndex = evolutionChain.indexOf(pokemonData.name);
-    switch (evolutionIndex) {
-      case 0: // Forma básica
-        basePrice *= 2;
-        break;
-      case 1: // Primeira evolução
-        basePrice *= 3;
-        break;
-      case 2: // Segunda evolução
-        basePrice *= 4;
-        break;
+  // Fator para Pokémon lendários e semi-lendários
+  if (legendaryPokemon.includes(pokemonData.name.toLowerCase())) {
+    basePrice *= 10; // Lendários têm um preço base muito mais alto
+  } else if (semiLegendaryPokemon.includes(pokemonData.name.toLowerCase())) {
+    basePrice *= 5; // Semi-lendários têm um preço base alto, mas menor que lendários
+  }
+
+  // Verifica se o Pokémon faz parte de uma evolução especial
+  for (const [basePokemon, evolutions] of Object.entries(specialEvolutions)) {
+    if (evolutions.includes(pokemonData.name.toLowerCase())) {
+      const evolutionIndex = evolutions.indexOf(pokemonData.name.toLowerCase());
+      basePrice *= (1 + evolutionIndex * 0.2);
+      break;
+    } else if (pokemonData.name.toLowerCase() === basePokemon) {
+      basePrice *= 1.2;
+      break;
     }
-  } else {
-    // Para Pokémon com menos de 3 evoluções
-    const evolutionIndex = evolutionChain.indexOf(pokemonData.name);
-    basePrice *= (1 + evolutionIndex * 0.5);
   }
 
-  // Fator para Pokémon lendários
-  if (speciesData.is_legendary) {
-    basePrice *= 10;
-  }
-
-  // Fator para Pokémon semi-lendários
-  if (semiLegendaryPokemon.includes(pokemonData.name.toLowerCase())) {
-    basePrice *= 5;
+  // Se não for uma evolução especial, usa a lógica padrão
+  if (!Object.values(specialEvolutions).flat().includes(pokemonData.name.toLowerCase())) {
+    if (evolutionChain.length === 3) {
+      const evolutionIndex = evolutionChain.indexOf(pokemonData.name);
+      basePrice *= (1 + evolutionIndex * 0.3);
+    } else {
+      const evolutionIndex = evolutionChain.indexOf(pokemonData.name);
+      basePrice *= (1 + evolutionIndex * 0.2);
+    }
   }
 
   // Ajuste baseado nas estatísticas do Pokémon
   const totalStats = pokemonData.stats.reduce((sum: number, stat: any) => sum + stat.base_stat, 0);
-  basePrice *= (1 + totalStats / 600); // 600 é uma estimativa de estatísticas totais altas
+  basePrice *= (1 + totalStats / 1000); // Reduzimos o impacto das estatísticas
 
   // Casos especiais
   if (pokemonData.name.toLowerCase() === 'magikarp') {
@@ -92,7 +117,7 @@ export const getPokemonDetails = async (pokemonName: string): Promise<ExtendedPo
     const pokemonDetails: ExtendedPokemon = {
       id: response.data.id,
       name: response.data.name,
-      image: response.data.sprites.front_default || '',
+      image: response.data.sprites.front_default || DITTO_IMAGE, // Usa a imagem do Ditto como fallback
       price: calculatePokemonPrice(response.data, speciesResponse.data, evolutionChain),
       type: response.data.types.map((type: any) => type.type.name).join(', '),
       weaknesses: await getTypeWeaknesses(response.data.types[0]?.type.url || ''),
@@ -113,7 +138,7 @@ export const getPokemonDetails = async (pokemonName: string): Promise<ExtendedPo
     return {
       id: 0,
       name: pokemonName,
-      image: '',
+      image: DITTO_IMAGE, // Usa a imagem do Ditto como fallback em caso de erro
       price: 10,
       type: 'Unknown',
       weaknesses: [],
