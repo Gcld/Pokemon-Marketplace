@@ -1,6 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
-import { Pokemon } from '@/models/pokemon';
+import { Pokemon } from '../models/Pokemon';
 
 const CartContainer = styled.div`
   background-color: white;

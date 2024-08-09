@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import styled from 'styled-components';
 import { getPokemonDetails } from '@/api/pokemonApi';
-import { Pokemon } from '@/models/pokemon';
+import { Pokemon } from '../../models/Pokemon';
 
 const Container = styled.div`
   background-color: #f5f5f5;

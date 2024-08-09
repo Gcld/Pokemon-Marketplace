@@ -1,7 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import Link from 'next/link';
-import {Pokemon } from '@/models/pokemon';
+import { Pokemon } from '../models/Pokemon';
 
 interface PokemonCardProps {
   pokemon: Pokemon;
