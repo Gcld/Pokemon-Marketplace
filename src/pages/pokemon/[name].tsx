@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import styled from 'styled-components';
 import { getPokemonDetails } from '@/api/pokemonApi';
-import { Pokemon } from '@/models/pokemon';
+import { ExtendedPokemon } from '@/models/extendedPokemon';
 
 const Container = styled.div`
   background-color: #f5f5f5;
@@ -54,35 +54,6 @@ const PriceTag = styled.div`
   margin-bottom: 20px;
 `;
 
-interface ExtendedPokemon extends Pokemon {
-  weaknesses: string[];
-  attacks: string[];
-  evolutions: string[];
-  stats: {
-    hp: number;
-    attack: number;
-    defense: number;
-    speed: number;
-  };
-}
-
-interface ExtendedPokemon {
-  id: number;
-  name: string;
-  image: string;
-  price: number;
-  type: string;
-  weaknesses: string[];
-  attacks: string[];
-  evolutions: string[];
-  stats: {
-    hp: number;
-    attack: number;
-    defense: number;
-    speed: number;
-  };
-}
-
 const PokemonDetails: React.FC = () => {
   const router = useRouter();
   const { name } = router.query;
@@ -105,9 +76,10 @@ const PokemonDetails: React.FC = () => {
         }
       }
     };
-  
+
     fetchPokemonDetails();
   }, [name]);
+
 
   if (loading) {
     return <div>Loading...</div>;
@@ -125,7 +97,7 @@ const PokemonDetails: React.FC = () => {
     <Container>
       <PokemonName>{pokemonDetails.name}</PokemonName>
       <PokemonImage src={pokemonDetails.image} alt={pokemonDetails.name} />
-      <PriceTag>${pokemonDetails.price}</PriceTag>
+      <PriceTag>P${pokemonDetails.price}</PriceTag>
 
       <PokemonInfo>
         <InfoTitle>Basic Info</InfoTitle>
