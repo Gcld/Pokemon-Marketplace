@@ -48,19 +48,33 @@ const Home: React.FC = () => {
   const [pokemonList, setPokemonList] = useState<ExtendedPokemon[]>([]);
   const [nextUrl, setNextUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchPokemonList = async () => {
-      setLoading(true);
-      const data = await getPokemonList(nextUrl);
-      const detailedPokemonList = await Promise.all(
-        data.results.map(async (pokemon: any) => {
-          return await getPokemonDetails(pokemon.name);
-        })
-      );
-      setPokemonList((prevList) => [...prevList, ...detailedPokemonList]);
-      setNextUrl(data.next);
-      setLoading(false);
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await getPokemonList(nextUrl);
+        const newPokemonList = await Promise.all(
+          data.results.map(async (pokemon: any) => {
+            return await getPokemonDetails(pokemon.name);
+          })
+        );
+        
+        // Remove duplicatas baseado no ID do Pokémon
+        const uniqueNewPokemonList = newPokemonList.filter((newPokemon: ExtendedPokemon) => 
+          !pokemonList.some(existingPokemon => existingPokemon.id === newPokemon.id)
+        );
+
+        setPokemonList(prevList => [...prevList, ...uniqueNewPokemonList]);
+        setNextUrl(data.next);
+      } catch (err) {
+        setError('Failed to fetch Pokémon. Please try again later.');
+        console.error('Error fetching Pokémon:', err);
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchPokemonList();
@@ -68,8 +82,8 @@ const Home: React.FC = () => {
 
   const handleScroll = () => {
     if (
-      window.innerHeight + document.documentElement.scrollTop ===
-      document.documentElement.offsetHeight &&
+      window.innerHeight + document.documentElement.scrollTop >=
+      document.documentElement.offsetHeight - 100 &&
       !loading &&
       nextUrl
     ) {
@@ -85,12 +99,13 @@ const Home: React.FC = () => {
   return (
     <Container>
       <Title>Pokémon Marketplace</Title>
+      {error && <ErrorMessage>{error}</ErrorMessage>}
       <PokemonList>
         {pokemonList.map((pokemon: ExtendedPokemon) => (
           <PokemonCard key={pokemon.id} pokemon={pokemon} />
         ))}
       </PokemonList>
-      {loading && <div>Loading...</div>}
+      {loading && <LoadingSpinner />}
     </Container>
   );
 };
