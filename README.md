@@ -56,7 +56,7 @@ Antes de começar, certifique-se de ter instalado em sua máquina:
 
 ### Passos para Instalação
 
-1. Clone o repositório:git clone https://github.com/seu-usuario/pokemon-marketplace.git
+1. Clone o repositório: git clone https://github.com/seu-usuario/pokemon-marketplace.git
 
 2. Navegue até o diretório do projeto:
 
