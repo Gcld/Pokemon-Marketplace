@@ -10,6 +10,18 @@ import { getPokemonList, getPokemonDetails } from '../api/pokemonApi';
 import { Pokemon } from '@/models/Pokemon';
 import { adjustPokemonPrice } from '../utils/pokemonUtils';
 
+
+const PageContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+`;
+
+const MainContent = styled.main`
+  background-color: #f5f5f5;
+  padding: 20px;
+`;
+
 const Container = styled.div`
   background-color: #f5f5f5;
   padding: 20px;
@@ -250,8 +262,7 @@ const Home: React.FC = () => {
   };
 
   return (
-    <Container>
-      <Title>Pokémon Marketplace</Title>
+    <MainContent>
       <UserWallet balance={balance} onAddFunds={handleAddFunds} />
       <SearchBar onSearch={handleSearch} />
       <FilterBar onFilterChange={handleFilterChange} />
@@ -283,7 +294,7 @@ const Home: React.FC = () => {
           isOpen={isCartOpen}
         />
       </CartContainer>
-    </Container>
+    </MainContent>
   );
 };
 
