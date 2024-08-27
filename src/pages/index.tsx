@@ -7,7 +7,7 @@ import UserWallet from '../components/UserWallet';
 import FilterBar from '../components/FilterBar';
 import SearchBar from '../components/SearchBar';
 import { getPokemonList, getPokemonDetails } from '../api/pokemonApi';
-import { Pokemon } from '@/models/Pokemon';
+import { Pokemon } from '@/models/pokemon';
 import { adjustPokemonPrice } from '../utils/pokemonUtils';
 
 
