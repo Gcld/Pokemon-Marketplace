@@ -1,8 +1,8 @@
 import axios from 'axios';
-import { Pokemon } from '../models/Pokemon';
+import { Pokemon } from '@/models/pokemon';
 import { calculatePokemonPrice } from '../utils/priceCalculator';
 import { getEvolutionChain, getTypeWeaknesses } from '../utils/pokemonUtils';
-import { API_BASE_URL, DITTO_IMAGE } from '../data/pokemonData';
+import { API_BASE_URL, DITTO_IMAGE } from '@/data/pokemonData';
 
 export const getPokemonList = async (url: string | null): Promise<any> => {
   if (!url) {

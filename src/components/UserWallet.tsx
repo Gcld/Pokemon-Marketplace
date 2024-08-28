@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import styled from 'styled-components';
+import React, { useState } from "react";
+import styled from "styled-components";
 
 const WalletContainer = styled.div`
   background-color: #f0f0f0;
@@ -40,7 +40,9 @@ const UserWallet: React.FC<UserWalletProps> = ({ balance, onAddFunds }) => {
         onChange={(e) => setAmount(Number(e.target.value))}
         min="1"
       />
-      <AddFundsButton onClick={() => onAddFunds(amount)}>Add Funds</AddFundsButton>
+      <AddFundsButton onClick={() => onAddFunds(amount)}>
+        Add Funds
+      </AddFundsButton>
     </WalletContainer>
   );
 };
