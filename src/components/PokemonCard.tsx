@@ -1,7 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import Link from 'next/link';
-import { Pokemon } from '../models/Pokemon';
+import { Pokemon } from '../models/pokemon';
 import { getTypeColor, getLighterColor, getContrastColor } from '@/utils/typeColors';
 
 interface PokemonCardProps {

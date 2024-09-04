@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Pokemon } from '@/models/Pokemon';
+import { Pokemon } from '@/models/pokemon';
 
 export const getTypeWeaknesses = async (typeUrl: string): Promise<string[]> => {
   if (!typeUrl) return [];
